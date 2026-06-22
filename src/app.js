@@ -8,9 +8,7 @@ const app = () => {
   let finalDestination = destinationPath;
 
   if (!sourcePath || !destinationPath) {
-    console.error('Missing arguments');
-
-    return;
+    throw new Error('Missing arguments');
   }
 
   if (sourcePath === destinationPath) {
@@ -19,13 +17,17 @@ const app = () => {
 
   if (destinationPath[destinationPath.length - 1] === '/') {
     if (!fs.existsSync(destinationPath)) {
-      console.error('No such directory');
-
-      return;
+      throw new Error('No such directory');
     } else {
       finalDestination = path.join(destinationPath, path.basename(sourcePath));
     }
   } else {
+    const targetDir = path.dirname(destinationPath);
+
+    if (!fs.existsSync(targetDir)) {
+      throw new Error('No such directory');
+    }
+
     if (
       fs.existsSync(destinationPath) &&
       fs.statSync(destinationPath).isDirectory()
@@ -40,10 +42,14 @@ const app = () => {
     fs.writeFileSync(finalDestination, content);
     fs.unlinkSync(sourcePath);
   } catch (error) {
-    console.error(error.message);
+    throw error;
   }
 };
 
 module.exports = { app };
 
-app();
+try {
+  app();
+} catch (error) {
+  console.error(error.message);
+}
